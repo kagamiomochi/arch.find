@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AUR Search</title>
+<title>Arch Search</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap');
 
@@ -21,6 +21,7 @@
     --yellow: #d29922;
     --red: #f85149;
     --purple: #bc8cff;
+    --teal: #39d353;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,13 +31,10 @@
     color: var(--text);
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
-    padding-bottom: 2rem;
+    padding-bottom: 3rem;
   }
 
-  header {
-    padding: 1.5rem 1rem 0;
-    text-align: center;
-  }
+  header { padding: 1.5rem 1rem 0; text-align: center; }
 
   .logo {
     display: inline-flex;
@@ -94,33 +92,86 @@
 
   input[type="text"]::placeholder { color: var(--text-muted); }
 
+  /* ソースタブ */
+  .source-tabs {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: center;
+    margin-top: 0.9rem;
+    padding: 0 1rem;
+  }
+
+  .source-tab {
+    flex: 1;
+    max-width: 140px;
+    padding: 0.45rem 0.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .source-tab.active-both {
+    background: #1793d115;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .source-tab.active-official {
+    background: #3fb95015;
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .source-tab.active-aur {
+    background: #bc8cff15;
+    border-color: var(--purple);
+    color: var(--purple);
+  }
+
+  /* AUR検索タイプ */
   .search-type {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.4rem;
     justify-content: center;
-    margin-top: 0.75rem;
+    margin-top: 0.6rem;
     flex-wrap: wrap;
     padding: 0 1rem;
+    transition: opacity 0.15s, max-height 0.15s;
+    max-height: 40px;
+    overflow: hidden;
+  }
+
+  .search-type.hidden {
+    opacity: 0;
+    max-height: 0;
+    pointer-events: none;
   }
 
   .type-btn {
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text-dim);
-    padding: 0.3rem 0.75rem;
+    padding: 0.25rem 0.65rem;
     border-radius: 20px;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     font-family: 'JetBrains Mono', monospace;
     cursor: pointer;
     transition: all 0.15s;
   }
 
   .type-btn.active {
-    background: var(--accent-dim);
-    border-color: var(--accent);
-    color: var(--accent);
+    background: #bc8cff15;
+    border-color: var(--purple);
+    color: var(--purple);
   }
 
+  /* 結果ヘッダー */
   .results-header {
     max-width: 600px;
     margin: 1.25rem auto 0.5rem;
@@ -148,6 +199,7 @@
     outline: none;
   }
 
+  /* カード */
   .results {
     max-width: 600px;
     margin: 0 auto;
@@ -164,7 +216,6 @@
     padding: 1rem;
     cursor: pointer;
     transition: border-color 0.15s, background 0.15s;
-    text-decoration: none;
     display: block;
     color: inherit;
   }
@@ -173,6 +224,10 @@
     border-color: var(--accent);
     background: var(--surface2);
     outline: none;
+  }
+
+  .pkg-card.official:hover, .pkg-card.official:focus {
+    border-color: var(--green);
   }
 
   .pkg-header {
@@ -190,6 +245,8 @@
     color: var(--accent);
   }
 
+  .pkg-card.official .pkg-name { color: var(--green); }
+
   .pkg-version {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.75rem;
@@ -201,18 +258,25 @@
     gap: 0.35rem;
     margin-left: auto;
     flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .badge {
-    font-size: 0.68rem;
-    padding: 0.15rem 0.45rem;
+    font-size: 0.67rem;
+    padding: 0.12rem 0.4rem;
     border-radius: 4px;
     font-family: 'JetBrains Mono', monospace;
     font-weight: 600;
   }
 
-  .badge-ood { background: #f8514920; color: var(--red); border: 1px solid #f8514940; }
+  .badge-ood  { background: #f8514920; color: var(--red);    border: 1px solid #f8514940; }
   .badge-orphan { background: #d2992220; color: var(--yellow); border: 1px solid #d2992240; }
+  .badge-core   { background: #3fb95020; color: var(--green);  border: 1px solid #3fb95040; }
+  .badge-extra  { background: #1793d120; color: var(--accent); border: 1px solid #1793d140; }
+  .badge-multilib { background: #bc8cff20; color: var(--purple); border: 1px solid #bc8cff40; }
+  .badge-aur    { background: #bc8cff15; color: var(--purple); border: 1px solid #bc8cff30; }
+  .badge-other  { background: #48505820; color: var(--text-dim); border: 1px solid var(--border); }
 
   .pkg-desc {
     font-size: 0.88rem;
@@ -240,9 +304,31 @@
   }
 
   .meta-item svg { flex-shrink: 0; }
-  .meta-votes { color: var(--green); }
-  .meta-pop { color: var(--purple); }
+  .meta-votes  { color: var(--green); }
+  .meta-pop    { color: var(--purple); }
+  .meta-size   { color: var(--teal); }
 
+  /* セクション区切り */
+  .section-label {
+    max-width: 600px;
+    margin: 1rem auto 0.4rem;
+    padding: 0 1rem;
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* モーダル */
   .overlay {
     display: none;
     position: fixed;
@@ -292,6 +378,8 @@
     padding-right: 2.5rem;
   }
 
+  .detail-name.official { color: var(--green); }
+
   .detail-ver {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85rem;
@@ -336,11 +424,7 @@
 
   .detail-row-val a { color: var(--accent); text-decoration: none; }
 
-  .detail-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
+  .detail-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
   .btn {
     flex: 1;
@@ -362,7 +446,8 @@
   }
 
   .btn:hover { opacity: 0.85; }
-  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary   { background: var(--accent); color: #fff; }
+  .btn-official  { background: var(--green);  color: #0d1117; }
   .btn-secondary { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
 
   .install-cmd {
@@ -409,11 +494,10 @@
     background-size: 200% 100%;
     animation: shimmer 1.2s infinite;
     border-radius: 6px;
-    height: 1em;
   }
 
   @keyframes shimmer {
-    0% { background-position: 200% 0; }
+    0%   { background-position: 200% 0; }
     100% { background-position: -200% 0; }
   }
 
@@ -426,15 +510,10 @@
 
   .skel-line { height: 0.9rem; margin-bottom: 0.5rem; }
   .skel-short { width: 40%; }
-  .skel-mid { width: 65%; }
-  .skel-full { width: 100%; }
+  .skel-mid   { width: 65%; }
+  .skel-full  { width: 100%; }
 
-  .deps-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-top: 0.3rem;
-  }
+  .deps-list { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.3rem; }
 
   .dep-tag {
     background: var(--surface);
@@ -473,15 +552,23 @@
       <path d="M16 2L2 28h5.5L16 10l8.5 18H30L16 2z" fill="#1793d1"/>
       <path d="M10.5 22l2.5-5 2.5 5h-5z" fill="#0d1117"/>
     </svg>
-    <span class="logo-text">aur<span>.find</span></span>
+    <span class="logo-text">arch<span>.find</span></span>
   </div>
+
   <div class="search-wrap">
     <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
     </svg>
     <input type="text" id="searchInput" placeholder="パッケージ名で検索…" autocomplete="off" autocorrect="off" spellcheck="false">
   </div>
-  <div class="search-type">
+
+  <div class="source-tabs">
+    <button class="source-tab active-both" data-src="both">両方</button>
+    <button class="source-tab" data-src="official">Official</button>
+    <button class="source-tab" data-src="aur">AUR</button>
+  </div>
+
+  <div class="search-type" id="searchType">
     <button class="type-btn active" data-type="name-desc">name & desc</button>
     <button class="type-btn" data-type="name">name</button>
     <button class="type-btn" data-type="maintainer">maintainer</button>
@@ -492,9 +579,10 @@
 <div class="results-header" id="resultsHeader" style="display:none">
   <span class="results-count" id="resultsCount"></span>
   <select class="sort-select" id="sortSelect">
-    <option value="popularity">人気順</option>
-    <option value="votes">投票順</option>
+    <option value="relevance">関連順</option>
     <option value="name">名前順</option>
+    <option value="votes">投票順 (AUR)</option>
+    <option value="popularity">人気順 (AUR)</option>
     <option value="updated">更新順</option>
   </select>
 </div>
@@ -502,7 +590,7 @@
 <div id="output"></div>
 
 <div class="overlay" id="overlay">
-  <div class="detail-card" id="detailCard">
+  <div class="detail-card">
     <button class="detail-close" id="detailClose">✕</button>
     <div id="detailContent"></div>
   </div>
@@ -511,25 +599,49 @@
 <div class="toast" id="toast">コピーしました！</div>
 
 <script>
-let currentResults = [];
-let searchType = 'name-desc';
+let aurResults = [];
+let officialResults = [];
+let sourceMode = 'both';
+let aurSearchType = 'name-desc';
 let debounceTimer;
 
-const searchInput = document.getElementById('searchInput');
-const output = document.getElementById('output');
-const overlay = document.getElementById('overlay');
-const resultsHeader = document.getElementById('resultsHeader');
+const searchInput  = document.getElementById('searchInput');
+const output       = document.getElementById('output');
+const overlay      = document.getElementById('overlay');
+const resultsHeader= document.getElementById('resultsHeader');
 const resultsCount = document.getElementById('resultsCount');
-const sortSelect = document.getElementById('sortSelect');
+const sortSelect   = document.getElementById('sortSelect');
+const searchTypeEl = document.getElementById('searchType');
 
+// ソースタブ切替
+document.querySelectorAll('.source-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.source-tab').forEach(b => {
+      b.classList.remove('active-both','active-official','active-aur');
+    });
+    sourceMode = btn.dataset.src;
+    btn.classList.add(
+      sourceMode === 'both'     ? 'active-both'     :
+      sourceMode === 'official' ? 'active-official'  : 'active-aur'
+    );
+    // AUR専用オプションの表示切替
+    searchTypeEl.classList.toggle('hidden', sourceMode === 'official');
+    if (searchInput.value.trim().length >= 2) triggerSearch();
+    else renderCombined();
+  });
+});
+
+// AUR検索タイプ
 document.querySelectorAll('.type-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    searchType = btn.dataset.type;
-    if (searchInput.value.trim().length >= 2) doSearch();
+    aurSearchType = btn.dataset.type;
+    if (searchInput.value.trim().length >= 2) triggerSearch();
   });
 });
+
+sortSelect.addEventListener('change', renderCombined);
 
 searchInput.addEventListener('input', () => {
   clearTimeout(debounceTimer);
@@ -537,113 +649,263 @@ searchInput.addEventListener('input', () => {
   if (q.length < 2) {
     output.innerHTML = '';
     resultsHeader.style.display = 'none';
+    aurResults = [];
+    officialResults = [];
     return;
   }
   showSkeleton();
-  debounceTimer = setTimeout(doSearch, 380);
+  debounceTimer = setTimeout(triggerSearch, 380);
 });
 
-sortSelect.addEventListener('change', () => {
-  if (currentResults.length) renderResults(currentResults);
-});
-
-async function doSearch() {
+async function triggerSearch() {
   const q = searchInput.value.trim();
   if (q.length < 2) return;
 
+  const fetchAur      = sourceMode !== 'official';
+  const fetchOfficial = sourceMode !== 'aur';
+
+  const promises = [];
+  if (fetchAur)      promises.push(fetchAUR(q));
+  if (fetchOfficial) promises.push(fetchOfficial_(q));
+  if (!fetchAur)     aurResults = [];
+  if (!fetchOfficial) officialResults = [];
+
+  await Promise.all(promises);
+  renderCombined();
+}
+
+async function fetchAUR(q) {
   try {
-    // Cloudflare Pages Function プロキシ経由でリクエスト
-    const url = `/api/aur?q=${encodeURIComponent(q)}&by=${searchType}`;
-    const res = await fetch(url);
+    const res  = await fetch(`/api/aur?q=${encodeURIComponent(q)}&by=${aurSearchType}`);
     const data = await res.json();
-
-    if (data.error) { showError(data.error); return; }
-
-    currentResults = data.results || [];
-    renderResults(currentResults);
-  } catch (e) {
-    showError('ネットワークエラー。接続を確認してください。');
-  }
+    aurResults = data.results || [];
+  } catch { aurResults = []; }
 }
 
-function sortResults(results) {
-  const s = sortSelect.value;
-  return [...results].sort((a, b) => {
-    if (s === 'popularity') return (b.Popularity || 0) - (a.Popularity || 0);
-    if (s === 'votes') return (b.NumVotes || 0) - (a.NumVotes || 0);
-    if (s === 'name') return a.Name.localeCompare(b.Name);
-    if (s === 'updated') return (b.LastModified || 0) - (a.LastModified || 0);
-    return 0;
-  });
+async function fetchOfficial_(q) {
+  try {
+    const res  = await fetch(`/api/arch?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    officialResults = (data.results || []).map(p => ({ ...p, _isOfficial: true }));
+  } catch { officialResults = []; }
 }
 
-function renderResults(results) {
-  const sorted = sortResults(results);
-  resultsHeader.style.display = 'flex';
-  resultsCount.textContent = `${results.length} 件`;
+function renderCombined() {
+  const sort = sortSelect.value;
 
-  if (results.length === 0) {
+  let official = [...officialResults];
+  let aur      = [...aurResults];
+
+  // ソート
+  const byName    = (a, b) => (a.Name || a.pkgname || '').localeCompare(b.Name || b.pkgname || '');
+  const byUpdated = (a, b) => {
+    const ta = a._isOfficial ? new Date(a.last_update||0).getTime()/1000 : (a.LastModified||0);
+    const tb = b._isOfficial ? new Date(b.last_update||0).getTime()/1000 : (b.LastModified||0);
+    return tb - ta;
+  };
+
+  if (sort === 'name') { official.sort(byName); aur.sort(byName); }
+  else if (sort === 'votes')      aur.sort((a,b) => (b.NumVotes||0)-(a.NumVotes||0));
+  else if (sort === 'popularity') aur.sort((a,b) => (b.Popularity||0)-(a.Popularity||0));
+  else if (sort === 'updated')    { official.sort(byUpdated); aur.sort(byUpdated); }
+  // relevance: APIのデフォルト順
+
+  const total = official.length + aur.length;
+  resultsHeader.style.display = total > 0 || (sourceMode !== 'both') ? 'flex' : 'none';
+  resultsCount.textContent = `${total} 件`;
+
+  if (total === 0) {
     output.innerHTML = `<div class="state-box"><span class="state-icon">🔍</span>「${escHtml(searchInput.value)}」は見つかりませんでした</div>`;
     return;
   }
 
-  output.innerHTML = `<div class="results">${sorted.map(pkg => pkgCard(pkg)).join('')}</div>`;
+  let html = '';
 
-  output.querySelectorAll('.pkg-card').forEach((el, i) => {
-    el.addEventListener('click', () => showDetail(sorted[i]));
-    el.addEventListener('keydown', e => { if (e.key === 'Enter') showDetail(sorted[i]); });
+  if (sourceMode === 'both') {
+    if (official.length) {
+      html += `<div class="section-label">Official (${official.length})</div>`;
+      html += `<div class="results">${official.map((p,i) => officialCard(p, i)).join('')}</div>`;
+    }
+    if (aur.length) {
+      html += `<div class="section-label">AUR (${aur.length})</div>`;
+      html += `<div class="results">${aur.map((p,i) => aurCard(p, i)).join('')}</div>`;
+    }
+  } else if (sourceMode === 'official') {
+    html += `<div class="results">${official.map((p,i) => officialCard(p, i)).join('')}</div>`;
+  } else {
+    html += `<div class="results">${aur.map((p,i) => aurCard(p, i)).join('')}</div>`;
+  }
+
+  output.innerHTML = html;
+
+  // イベント付け直し
+  output.querySelectorAll('.pkg-card.official').forEach((el, i) => {
+    el.addEventListener('click', () => showDetailOfficial(official[i]));
+    el.addEventListener('keydown', e => { if (e.key==='Enter') showDetailOfficial(official[i]); });
+  });
+  output.querySelectorAll('.pkg-card.aur-card').forEach((el, i) => {
+    el.addEventListener('click', () => showDetailAUR(aur[i]));
+    el.addEventListener('keydown', e => { if (e.key==='Enter') showDetailAUR(aur[i]); });
   });
 }
 
-function pkgCard(pkg) {
-  const ood = pkg.OutOfDate ? '<span class="badge badge-ood">OOD</span>' : '';
+function repoBadge(repo) {
+  if (!repo) return '';
+  const r = repo.toLowerCase();
+  const cls = r === 'core' ? 'badge-core' : r === 'extra' ? 'badge-extra' : r.includes('multilib') ? 'badge-multilib' : 'badge-other';
+  return `<span class="badge ${cls}">${escHtml(repo)}</span>`;
+}
+
+function officialCard(p) {
+  const name    = p.pkgname || '';
+  const ver     = p.pkgver  ? `${p.pkgver}-${p.pkgrel}` : '';
+  const desc    = p.pkgdesc || '説明なし';
+  const repo    = p.repo    || '';
+  const updated = p.last_update ? relTime(new Date(p.last_update).getTime()/1000) : '';
+  const size    = p.compressed_size ? fmtSize(p.compressed_size) : '';
+
+  return `
+  <div class="pkg-card official" tabindex="0" role="button">
+    <div class="pkg-header">
+      <span class="pkg-name">${escHtml(name)}</span>
+      <span class="pkg-version">${escHtml(ver)}</span>
+      <div class="pkg-badges">${repoBadge(repo)}</div>
+    </div>
+    <div class="pkg-desc">${escHtml(desc)}</div>
+    <div class="pkg-meta">
+      ${size ? `<span class="meta-item meta-size"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>${size}</span>` : ''}
+      ${updated ? `<span class="meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${updated}</span>` : ''}
+      ${p.maintainers?.length ? `<span class="meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${escHtml(p.maintainers[0])}</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function aurCard(pkg) {
+  const ood    = pkg.OutOfDate ? '<span class="badge badge-ood">OOD</span>' : '';
   const orphan = !pkg.Maintainer ? '<span class="badge badge-orphan">orphan</span>' : '';
-  const votes = pkg.NumVotes || 0;
-  const pop = pkg.Popularity ? pkg.Popularity.toFixed(2) : '0.00';
+  const pop    = pkg.Popularity ? pkg.Popularity.toFixed(2) : '0.00';
   const updated = pkg.LastModified ? relTime(pkg.LastModified) : '';
 
   return `
-  <div class="pkg-card" tabindex="0" role="button">
+  <div class="pkg-card aur-card" tabindex="0" role="button">
     <div class="pkg-header">
-      <span class="pkg-name">${escHtml(pkg.Name)}</span>
-      <span class="pkg-version">${escHtml(pkg.Version || '')}</span>
-      <div class="pkg-badges">${ood}${orphan}</div>
+      <span class="pkg-name">${escHtml(pkg.Name||'')}</span>
+      <span class="pkg-version">${escHtml(pkg.Version||'')}</span>
+      <div class="pkg-badges"><span class="badge badge-aur">AUR</span>${ood}${orphan}</div>
     </div>
-    <div class="pkg-desc">${escHtml(pkg.Description || '説明なし')}</div>
+    <div class="pkg-desc">${escHtml(pkg.Description||'説明なし')}</div>
     <div class="pkg-meta">
       <span class="meta-item meta-votes">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-        ${votes}
+        ${pkg.NumVotes||0}
       </span>
       <span class="meta-item meta-pop">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
         ${pop}
       </span>
-      ${updated ? `<span class="meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${updated}</span>` : ''}
+      ${updated ? `<span class="meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${updated}</span>` : ''}
       ${pkg.Maintainer ? `<span class="meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${escHtml(pkg.Maintainer)}</span>` : ''}
     </div>
   </div>`;
 }
 
-function showDetail(pkg) {
-  const aurUrl = `https://aur.archlinux.org/packages/${pkg.Name}`;
-  const snapshotUrl = `https://aur.archlinux.org/cgit/aur.git/snapshot/${pkg.Name}.tar.gz`;
-  const updated = pkg.LastModified ? new Date(pkg.LastModified * 1000).toLocaleDateString('ja-JP') : '-';
-  const submitted = pkg.FirstSubmitted ? new Date(pkg.FirstSubmitted * 1000).toLocaleDateString('ja-JP') : '-';
-  const ood = pkg.OutOfDate ? `<span class="badge badge-ood">Out of Date</span>` : '';
+function showDetailOfficial(p) {
+  const name    = p.pkgname || '';
+  const ver     = p.pkgver  ? `${p.pkgver}-${p.pkgrel}` : '';
+  const repo    = p.repo    || '';
+  const arch    = p.arch    || '';
+  const updated = p.last_update ? new Date(p.last_update).toLocaleDateString('ja-JP') : '-';
+  const isize   = p.installed_size  ? fmtSize(p.installed_size)  : '-';
+  const csize   = p.compressed_size ? fmtSize(p.compressed_size) : '-';
+  const pageUrl = `https://archlinux.org/packages/${repo}/${arch}/${name}/`;
+  const cmd     = `pacman -S ${name}`;
 
-  const deps = (pkg.Depends || []).map(d => `<span class="dep-tag">${escHtml(d)}</span>`).join('');
-  const makedeps = (pkg.MakeDepends || []).map(d => `<span class="dep-tag">${escHtml(d)}</span>`).join('');
-  const optdeps = (pkg.OptDepends || []).map(d => `<span class="dep-tag">${escHtml(d)}</span>`).join('');
+  const deps    = (p.depends       || []).map(d => `<span class="dep-tag">${escHtml(d)}</span>`).join('');
+  const makedeps= (p.makedepends   || []).map(d => `<span class="dep-tag">${escHtml(d)}</span>`).join('');
+  const optdeps = (p.optdepends    || []).map(d => `<span class="dep-tag">${escHtml(d)}</span>`).join('');
 
   document.getElementById('detailContent').innerHTML = `
-    <div class="detail-name">${escHtml(pkg.Name)} ${ood}</div>
-    <div class="detail-ver">${escHtml(pkg.Version || '')}</div>
-    <div class="detail-desc">${escHtml(pkg.Description || '説明なし')}</div>
+    <div class="detail-name official">${escHtml(name)} ${repoBadge(repo)}</div>
+    <div class="detail-ver">${escHtml(ver)}</div>
+    <div class="detail-desc">${escHtml(p.pkgdesc||'説明なし')}</div>
 
     <div class="install-cmd">
-      <span>yay -S ${escHtml(pkg.Name)}</span>
-      <button class="copy-btn" onclick="copyCmd('yay -S ${escHtml(pkg.Name)}')">
+      <span>${escHtml(cmd)}</span>
+      <button class="copy-btn" onclick="copyCmd('${escHtml(cmd)}')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-row">
+        <div class="detail-row-label">リポジトリ</div>
+        <div class="detail-row-val" style="color:var(--green)">${escHtml(repo)}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-row-label">アーキテクチャ</div>
+        <div class="detail-row-val">${escHtml(arch)}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-row-label">圧縮サイズ</div>
+        <div class="detail-row-val" style="color:var(--teal)">${csize}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-row-label">インストール後</div>
+        <div class="detail-row-val">${isize}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-row-label">最終更新</div>
+        <div class="detail-row-val">${updated}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-row-label">ライセンス</div>
+        <div class="detail-row-val">${(p.licenses||['-']).join(', ')}</div>
+      </div>
+      ${p.maintainers?.length ? `<div class="detail-row" style="grid-column:1/-1">
+        <div class="detail-row-label">メンテナー</div>
+        <div class="detail-row-val">${p.maintainers.map(escHtml).join(', ')}</div>
+      </div>` : ''}
+      ${p.url ? `<div class="detail-row" style="grid-column:1/-1">
+        <div class="detail-row-label">上流URL</div>
+        <div class="detail-row-val"><a href="${escHtml(p.url)}" target="_blank" rel="noopener">${escHtml(p.url)}</a></div>
+      </div>` : ''}
+    </div>
+
+    ${deps     ? `<div class="detail-row" style="margin-bottom:0.5rem"><div class="detail-row-label">Depends</div><div class="deps-list">${deps}</div></div>` : ''}
+    ${makedeps ? `<div class="detail-row" style="margin-bottom:0.5rem"><div class="detail-row-label">MakeDepends</div><div class="deps-list">${makedeps}</div></div>` : ''}
+    ${optdeps  ? `<div class="detail-row" style="margin-bottom:1rem"><div class="detail-row-label">OptDepends</div><div class="deps-list">${optdeps}</div></div>` : ''}
+    ${!deps && !makedeps && !optdeps ? '<div style="margin-bottom:1rem"></div>' : ''}
+
+    <div class="detail-actions">
+      <a class="btn btn-official" href="${escHtml(pageUrl)}" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Arch Packages
+      </a>
+    </div>
+  `;
+  openOverlay();
+}
+
+function showDetailAUR(pkg) {
+  const aurUrl     = `https://aur.archlinux.org/packages/${pkg.Name}`;
+  const snapshotUrl= `https://aur.archlinux.org/cgit/aur.git/snapshot/${pkg.Name}.tar.gz`;
+  const updated    = pkg.LastModified   ? new Date(pkg.LastModified*1000).toLocaleDateString('ja-JP') : '-';
+  const submitted  = pkg.FirstSubmitted ? new Date(pkg.FirstSubmitted*1000).toLocaleDateString('ja-JP') : '-';
+  const ood        = pkg.OutOfDate ? `<span class="badge badge-ood">Out of Date</span>` : '';
+  const cmd        = `yay -S ${pkg.Name}`;
+
+  const deps    = (pkg.Depends    ||[]).map(d=>`<span class="dep-tag">${escHtml(d)}</span>`).join('');
+  const makedeps= (pkg.MakeDepends||[]).map(d=>`<span class="dep-tag">${escHtml(d)}</span>`).join('');
+  const optdeps = (pkg.OptDepends ||[]).map(d=>`<span class="dep-tag">${escHtml(d)}</span>`).join('');
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-name">${escHtml(pkg.Name||'')} <span class="badge badge-aur">AUR</span> ${ood}</div>
+    <div class="detail-ver">${escHtml(pkg.Version||'')}</div>
+    <div class="detail-desc">${escHtml(pkg.Description||'説明なし')}</div>
+
+    <div class="install-cmd">
+      <span>${escHtml(cmd)}</span>
+      <button class="copy-btn" onclick="copyCmd('${escHtml(cmd)}')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
       </button>
     </div>
@@ -651,19 +913,19 @@ function showDetail(pkg) {
     <div class="detail-grid">
       <div class="detail-row">
         <div class="detail-row-label">投票</div>
-        <div class="detail-row-val" style="color:var(--green)">${pkg.NumVotes || 0}</div>
+        <div class="detail-row-val" style="color:var(--green)">${pkg.NumVotes||0}</div>
       </div>
       <div class="detail-row">
         <div class="detail-row-label">人気度</div>
-        <div class="detail-row-val" style="color:var(--purple)">${pkg.Popularity ? pkg.Popularity.toFixed(4) : '-'}</div>
+        <div class="detail-row-val" style="color:var(--purple)">${pkg.Popularity?pkg.Popularity.toFixed(4):'-'}</div>
       </div>
       <div class="detail-row">
         <div class="detail-row-label">メンテナー</div>
-        <div class="detail-row-val">${pkg.Maintainer ? escHtml(pkg.Maintainer) : '<span style="color:var(--yellow)">orphan</span>'}</div>
+        <div class="detail-row-val">${pkg.Maintainer?escHtml(pkg.Maintainer):'<span style="color:var(--yellow)">orphan</span>'}</div>
       </div>
       <div class="detail-row">
         <div class="detail-row-label">ライセンス</div>
-        <div class="detail-row-val">${(pkg.License || ['-']).join(', ')}</div>
+        <div class="detail-row-val">${(pkg.License||['-']).join(', ')}</div>
       </div>
       <div class="detail-row">
         <div class="detail-row-label">登録日</div>
@@ -673,38 +935,32 @@ function showDetail(pkg) {
         <div class="detail-row-label">最終更新</div>
         <div class="detail-row-val">${updated}</div>
       </div>
-      ${pkg.URL ? `<div class="detail-row" style="grid-column:1/-1">
+      ${pkg.URL?`<div class="detail-row" style="grid-column:1/-1">
         <div class="detail-row-label">上流URL</div>
         <div class="detail-row-val"><a href="${escHtml(pkg.URL)}" target="_blank" rel="noopener">${escHtml(pkg.URL)}</a></div>
-      </div>` : ''}
+      </div>`:''}
     </div>
 
-    ${deps ? `<div class="detail-row" style="margin-bottom:0.5rem">
-      <div class="detail-row-label">Depends</div>
-      <div class="deps-list">${deps}</div>
-    </div>` : ''}
-    ${makedeps ? `<div class="detail-row" style="margin-bottom:0.5rem">
-      <div class="detail-row-label">MakeDepends</div>
-      <div class="deps-list">${makedeps}</div>
-    </div>` : ''}
-    ${optdeps ? `<div class="detail-row" style="margin-bottom:1rem">
-      <div class="detail-row-label">OptDepends</div>
-      <div class="deps-list">${optdeps}</div>
-    </div>` : ''}
-    ${!deps && !makedeps && !optdeps ? '<div style="margin-bottom:1rem"></div>' : ''}
+    ${deps     ? `<div class="detail-row" style="margin-bottom:0.5rem"><div class="detail-row-label">Depends</div><div class="deps-list">${deps}</div></div>` : ''}
+    ${makedeps ? `<div class="detail-row" style="margin-bottom:0.5rem"><div class="detail-row-label">MakeDepends</div><div class="deps-list">${makedeps}</div></div>` : ''}
+    ${optdeps  ? `<div class="detail-row" style="margin-bottom:1rem"><div class="detail-row-label">OptDepends</div><div class="deps-list">${optdeps}</div></div>` : ''}
+    ${!deps&&!makedeps&&!optdeps?'<div style="margin-bottom:1rem"></div>':''}
 
     <div class="detail-actions">
-      <a class="btn btn-primary" href="${aurUrl}" target="_blank" rel="noopener">
+      <a class="btn btn-primary" href="${escHtml(aurUrl)}" target="_blank" rel="noopener">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         AURページ
       </a>
-      <a class="btn btn-secondary" href="${snapshotUrl}">
+      <a class="btn btn-secondary" href="${escHtml(snapshotUrl)}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Snapshot
       </a>
     </div>
   `;
+  openOverlay();
+}
 
+function openOverlay() {
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -719,7 +975,7 @@ function closeDetail() {
 }
 
 function copyCmd(cmd) {
-  navigator.clipboard.writeText(cmd).then(() => showToast());
+  navigator.clipboard.writeText(cmd).then(showToast);
 }
 
 function showToast() {
@@ -730,7 +986,7 @@ function showToast() {
 
 function showSkeleton() {
   resultsHeader.style.display = 'none';
-  output.innerHTML = `<div class="results">${Array(4).fill(`
+  output.innerHTML = `<div class="results">${Array(5).fill(`
     <div class="skel-card">
       <div class="skeleton skel-line skel-short" style="margin-bottom:0.6rem"></div>
       <div class="skeleton skel-line skel-full"></div>
@@ -738,9 +994,11 @@ function showSkeleton() {
     </div>`).join('')}</div>`;
 }
 
-function showError(msg) {
-  resultsHeader.style.display = 'none';
-  output.innerHTML = `<div class="state-box"><span class="state-icon">⚠️</span>${escHtml(msg)}</div>`;
+function fmtSize(bytes) {
+  if (bytes < 1024)       return `${bytes} B`;
+  if (bytes < 1024**2)    return `${(bytes/1024).toFixed(1)} KB`;
+  if (bytes < 1024**3)    return `${(bytes/1024**2).toFixed(1)} MB`;
+  return `${(bytes/1024**3).toFixed(2)} GB`;
 }
 
 function escHtml(s) {
@@ -748,12 +1006,12 @@ function escHtml(s) {
 }
 
 function relTime(ts) {
-  const diff = Date.now() / 1000 - ts;
-  if (diff < 3600) return `${Math.floor(diff / 60)}分前`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}時間前`;
-  if (diff < 86400 * 30) return `${Math.floor(diff / 86400)}日前`;
-  if (diff < 86400 * 365) return `${Math.floor(diff / 86400 / 30)}ヶ月前`;
-  return `${Math.floor(diff / 86400 / 365)}年前`;
+  const diff = Date.now()/1000 - ts;
+  if (diff < 3600)        return `${Math.floor(diff/60)}分前`;
+  if (diff < 86400)       return `${Math.floor(diff/3600)}時間前`;
+  if (diff < 86400*30)    return `${Math.floor(diff/86400)}日前`;
+  if (diff < 86400*365)   return `${Math.floor(diff/86400/30)}ヶ月前`;
+  return `${Math.floor(diff/86400/365)}年前`;
 }
 
 searchInput.focus();
