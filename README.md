@@ -1,2 +1,2 @@
-# arch.find
+# arch-find
 Arch Linuxの公式リポジトリとAURのモバイルフレンドリーな検索サイト
